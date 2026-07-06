@@ -1,0 +1,16 @@
+add_file -type vhdl -lib dsnet ./arp.vhd
+add_file -type vhdl -lib dsnet ./dhcp.vhd
+add_file -type vhdl -lib dsnet ./icmp.vhd
+add_file -type vhdl -lib dsnet ./ipv4_address_engine.vhd
+add_file -type vhdl -lib dsnet ./rx_eth.vhd
+add_file -type vhdl -lib dsnet ./rx_ipv4.vhd
+add_file -type vhdl -lib dsnet ./rx_udp.vhd
+add_file -type vhdl -lib dsnet ./udp_stack.vhd
+add_file -type vhdl -lib dsnet ./tx_eth.vhd
+add_file -type vhdl -lib dsnet ./tx_ipv4.vhd
+add_file -type vhdl -lib dsnet ./tx_ipv4_fragment.vhd
+add_file -type vhdl -lib dsnet ./tx_udp.vhd
+add_file -type vhdl -lib dsnet ./internet_checksum.vhd
+add_file -type vhdl -lib dsnet ./stream_checksum.vhd
+add_file -type vhdl -lib dsnet ./stream_size.vhd
+add_file -type vhdl -lib dsnet ./pod.vhd

@@ -1,0 +1,12 @@
+process_compileconfig [dict create top "tb"]
+
+load_module nvc
+load_module simmac
+
+pipeline_add sim
+
+add_file -type prj ../ds.prj
+add_file -type prj ../net/dsnet.prj
+add_file -type prj ../bus/dsbus.prj
+
+add_file -type vhdl example.vhd

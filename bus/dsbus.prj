@@ -1,0 +1,8 @@
+add_file -type vhdl -lib dsbus crossbar.vhd
+add_file -type vhdl -lib dsbus cdc.vhd
+add_file -type vhdl -lib dsbus reg.vhd
+add_file -type vhdl -lib dsbus connect.vhd
+add_file -type vhdl -lib dsbus regbank.vhd
+add_file -type vhdl -lib dsbus regs_rw.vhd
+add_file -type vhdl -lib dsbus regs_mem.vhd
+add_file -type vhdl -lib dsbus types.vhd
