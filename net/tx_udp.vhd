@@ -20,8 +20,7 @@ library dsnet;
 
 entity tx_udp is
   generic (
-    width : integer := 64;
-    depth : integer := 2048 * 2 * 8
+    width : integer := 64
     );
   port (
     clk : in std_logic;
@@ -59,6 +58,8 @@ architecture net_tx_udp_arch of tx_udp is
   signal out_x_ready, out_x_valid, out_x_last : std_logic;
   signal out_x_data                           : std_logic_vector(out_data'range);
   signal out_x_keep                           : std_logic_vector(out_keep'range);
+
+  constant depth : integer := 2048 * 8;
 begin
   composer_inst : entity ds.composer generic map (
     width => width,

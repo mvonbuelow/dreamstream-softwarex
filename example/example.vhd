@@ -17,7 +17,7 @@ architecture tb_arch of tb is
 
   signal my_mac : std_logic_vector(47 downto 0) := x"112233445566";
 
-  constant width : integer := 8;
+  constant width : integer := 512;
 
   signal rx_ready, rx_valid, rx_last, tx_ready, tx_valid, tx_last : std_logic;
   signal rx_data, tx_data                                         : std_logic_vector(width - 1 downto 0);
@@ -69,7 +69,8 @@ begin
       out_valid => udp2_tx_valid,
       out_ready => udp2_tx_ready,
       out_data  => udp2_tx_data,
-      out_last  => udp2_tx_last
+      out_last  => udp2_tx_last,
+      out_keep  => udp2_tx_keep
       );
 
 
@@ -96,6 +97,7 @@ begin
       rx_last       => rx_last,
       rx_keep       => rx_keep,
       tx_data       => tx_data,
+      tx_keep       => tx_keep,
       tx_ready      => tx_ready,
       tx_valid      => tx_valid,
       tx_last       => tx_last,
