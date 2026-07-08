@@ -1,4 +1,5 @@
 add_file -type vhdl -lib ds eof2last.vhd
+add_file -type vhdl -lib ds sync_fifo.vhd
 add_file -type vhdl -lib ds fifo.vhd
 add_file -type vhdl -lib ds async_fifo.vhd
 add_file -type vhdl -lib ds keep_packer.vhd

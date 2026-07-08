@@ -128,7 +128,7 @@ architecture udp_stack_arch of udp_stack is
   signal rxfrontreg_valid, rxfrontreg_ready, rxfrontreg_last                              : std_logic;
   signal rxfrontreg_user                                                                  : std_logic_vector(0 downto 0);
   signal int_rst                                                                          : std_logic;
-  signal drop, fifofull                                                                   : std_logic;
+  signal drop                                                                             : std_logic;
 begin
   addr_regs : block
     signal ipmux, maskmux : std_logic_vector(31 downto 0);
@@ -182,11 +182,10 @@ begin
       out_ready => rxfifo_ready,
       out_valid => rxfifo_valid,
       out_data  => rxfifo_data_pre,
-      out_last  => rxfifo_last,
-      full      => fifofull
+      out_last  => rxfifo_last
       );
 
-  drop        <= '1' when (rx_valid = '1' and fifofull = '1' and drop_if_full) else '0';  --(rx_valid = '1' and rx_user(0) = '1') or 
+  drop        <= '1' when (rx_valid = '1' and rx_ready = '0' and drop_if_full) else '0';  --(rx_valid = '1' and rx_user(0) = '1') or 
   rxfifo_data <= rxfifo_data_pre(rxfifo_data'range);
   rxfifo_keep <= "1" & rxfifo_data_pre(rxfifo_data_pre'left downto rxfifo_data'length);
 
@@ -243,21 +242,6 @@ begin
       out_last  => tx_last,
       out_keep  => tx_keep
       );
-
-  -- regs_inst : entity dsbus.regs_rw generic map (
-  --   ro       => true,
-  --   n        => 2,
-  --   addr_off => 0,
-  --   addr_len => 4
-  --   ) port map (
-  --     clk => clk,
-  --     rst => int_rst,
-
-  --     reg => subs(0),
-
-  --     regs_in(0) => x"12345678",
-  --     regs_in(1) => x"12312399"
-  --     );
 
   crossbar_inst : entity dsbus.crossbar generic map (
     addr_off => 10,
