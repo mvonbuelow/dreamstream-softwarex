@@ -13,7 +13,7 @@ You can install `openprj` and `NVC` manually, but the easiest option is to use t
 After installing Nix, enter the development environment with:
 
 ```bash
-nix develop
+sudo nix develop
 ```
 
 ### Create a Working Directory
@@ -26,7 +26,7 @@ cd workdir
 ### Start the Simulation
 
 ```bash
-sudo --preserve-env=PATH env openprj --sim ../example.prj
+openprj --sim ../example.prj
 ```
 
 The simulation must be run as `root`, since creating and managing `veth` interfaces requires elevated privileges.
