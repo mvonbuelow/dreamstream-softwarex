@@ -246,7 +246,7 @@ begin
     addr_off      => 0,
     addr_len      => 8,
     wreg_addr_bit => 9,
-    wreg_defaults => (others => (others => '0'))
+    wreg_defaults => (0 => x"00000000", 1 => x"ffffff00")
     ) port map (
       clk      => clk,
       rst      => int_rst,

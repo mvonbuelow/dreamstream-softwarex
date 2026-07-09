@@ -22,7 +22,7 @@ use dsbus.types.all;
 entity crossbar is
   generic (
     addr_off : integer := 0;
-    addr_len : integer := 1
+    addr_len : integer := 0
     );
   port (
     clk : in std_logic;
@@ -42,6 +42,8 @@ architecture crossbar_arch of crossbar is
     araddr(mngr.araddr'range),
     rdata(mngr.rdata'range)
     );
+
+  constant addr_len_int : integer := ite_i(addr_len = 0, log2_ceil(w), addr_len);
 begin
   reg_inst : entity dsbus.reg port map (
     clk  => clk,
@@ -55,7 +57,7 @@ begin
     signal rstate, rstate_next                                 : state_t                               := IDLE;
     constant treemux_addr_w                                    : integer                               := log2_ceil(w);
     signal int_raddr                                           : unsigned(treemux_addr_w - 1 downto 0) := (others => '0');
-    signal full_raddr                                          : unsigned(addr_len - 1 downto 0)       := (others => '0');
+    signal full_raddr                                          : unsigned(addr_len_int - 1 downto 0)   := (others => '0');
     signal resp_read_mux                                       : std_logic_vector_array(0 to w - 1)(35 downto 0);
     signal err_raddr                                           : std_logic;
     signal intmngr_read_valid_mux, intmngr_read_addr_ready_mux : std_logic;
@@ -128,7 +130,7 @@ begin
     signal wstate, wstate_next                                                                 : state_t                               := IDLE;
     constant treemux_addr_w                                                                    : integer                               := log2_ceil(w);
     signal int_waddr                                                                           : unsigned(treemux_addr_w - 1 downto 0) := (others => '0');
-    signal full_waddr                                                                          : unsigned(addr_len - 1 downto 0)       := (others => '0');
+    signal full_waddr                                                                          : unsigned(addr_len_int - 1 downto 0)   := (others => '0');
     signal resp_write_mux                                                                      : std_logic_vector_array(0 to w - 1)(1 downto 0);
     signal err_waddr                                                                           : std_logic;
     signal intmngr_write_ready_mux, intmngr_write_addr_ready_mux, intmngr_write_resp_valid_mux : std_logic;

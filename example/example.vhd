@@ -6,6 +6,8 @@ library simmac;
 library ds;
 library dsnet;
 library dsbus;
+
+use ds.types.all;
 use dsbus.types.all;
 
 entity tb is
@@ -15,7 +17,30 @@ architecture tb_arch of tb is
   signal clk, rst                : std_logic := '1';
   signal link_active, udp_active : std_logic;
 
-  signal my_mac : std_logic_vector(47 downto 0) := x"112233445566";
+  function ip_to_slv(ip : string) return std_logic_vector is
+    variable result : std_logic_vector(31 downto 0);
+    variable value  : integer := 0;
+    variable idx    : integer := 31;
+  begin
+    result := (others => '0');
+    for i in ip'range loop
+      if ip(i) >= '0' and ip(i) <= '9' then
+        value := value * 10 + character'pos(ip(i)) - character'pos('0');
+      elsif ip(i) = '.' then
+        result(idx downto idx - 7) := std_logic_vector(to_unsigned(value, 8));
+        idx                        := idx - 8;
+        value                      := 0;
+      end if;
+    end loop;
+    result(idx downto idx - 7) :=
+      std_logic_vector(to_unsigned(value, 8));
+    return result;
+  end function;
+
+  constant my_mac       : std_logic_vector(47 downto 0) := x"112233445566";  -- Does not matter. You can use that in your DHCP server if you want.
+  constant my_ip        : string                        := "10.123.123.123";  -- Configure 0.0.0.0 to use DHCP.
+  constant burst        : boolean                       := true;
+  constant udp2_tx_dest : std_logic_vector(95 downto 0) := x"ffffffffffff" & ip_to_slv("10.123.123.255") & x"4321";
 
   constant width : integer := 512;
 
@@ -42,8 +67,6 @@ architecture tb_arch of tb is
   constant packet_keep_ones  : std_logic_vector(packet_size - 1 downto 0)                          := (others => '1');
   constant packet_keep_zeros : std_logic_vector(packet_data'length / 8 - packet_size - 1 downto 0) := (others => '0');
   signal packet_keep         : std_logic_vector(2047 downto 0)                                     := packet_keep_ones & packet_keep_zeros;
-
-  constant udp2_tx_dest : std_logic_vector(95 downto 0) := (others => '1');
 begin
   -- udp port 0x1234 echos
   udp_tx_valid <= udp_rx_valid;
@@ -64,7 +87,7 @@ begin
       in_data  => packet_data,
       in_keep  => packet_keep,
       in_last  => '1',
-      in_valid => '1',
+      in_valid => ite_l(burst, '1', '0'),
 
       out_valid => udp2_tx_valid,
       out_ready => udp2_tx_ready,
@@ -73,6 +96,11 @@ begin
       out_keep  => udp2_tx_keep
       );
 
+  mngr.awvalid <= '1';
+  mngr.awaddr  <= x"0000_0200";
+  mngr.wvalid  <= '1';
+  mngr.wdata   <= ip_to_slv(my_ip);
+  mngr.bready  <= '1';
 
   clk <= not clk after 4 ns;
   proc_rst : process

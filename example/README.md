@@ -31,11 +31,33 @@ openprj --sim ../example.prj
 
 The simulation must be run as `root`, since creating and managing `veth` interfaces requires elevated privileges.
 
-You can now see from the simulation output that it sends DHCP requests. You can also verify that on the host side using `wireshark` or `tcpdump`. To make DHCP succeed, continue with the following sections. After that, you are also able to ping the simulation.
+While running, use another shell to assign an IP to the host. The example simulation is configured to use the IP `10.123.123.123/24`.
+```bash
+sudo ip addr add 10.123.123.1/24 dev ds_host
+```
+
+You can now ping the simulation:
+```bash
+ping 10.123.123.123
+```
+
+... or send UDP data to the echo port `0x1234`:
+```bash
+echo "hello" | nc -u 10.123.123.123 4660
+```
+
+... or receive our dummy zeros from the `burst` setting:
+```bash
+socat -u UDP-RECV:17185 - | xxd
+```
+
+You can see all packets in the simulation output. You can also verify what's going on on the host side using `wireshark` or `tcpdump`. To make DHCP succeed, continue with the following sections.
 
 ---
 
-## Host Network Configuration
+## Run with DHCP
+
+First, you need to disable the static ip in `example.vhd` by setting `my_ip` to `0.0.0.0`.
 
 To provide the simulated device with network connectivity, the host system must:
 

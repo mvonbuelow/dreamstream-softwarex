@@ -121,14 +121,16 @@ begin
           when BOOTING =>
             id      <= x"ffffffffffffffffffff0043";
             timeout <= timeout + 1;
-            if timeout(10) = '1' then
+            if timeout(10) = '1' and have_ip = '0' then
               timeout    <= (others => '0');
               state_next <= D;
               txnctr     <= txnctr + 1;
             end if;
           when D | R =>
-            if state /= D or have_ip = '0' then
-              if out_x_valid = '1' and out_x_last = '1' and out_x_ready = '1' then
+            if out_x_valid = '1' and out_x_last = '1' and out_x_ready = '1' then
+              if have_ip = '1' then
+                state <= BOOTING;
+              else
                 state <= O when state = D else A;
               end if;
             end if;
