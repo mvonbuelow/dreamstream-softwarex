@@ -26,7 +26,6 @@ entity sync_fifo is
     use_last              : boolean := false;
     packet_mode           : boolean := false;
     drop_packet           : boolean := false;
-    drop_absorb           : boolean := true;  -- if packet is dropped, assume the packet continues until last flag is set. the fifo will absorb that remaining data.
     max_packets           : integer := depth  -- every value is fine; the fifo will de-assert in-ready when we cannot count more packets
     );
   port (

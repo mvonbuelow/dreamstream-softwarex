@@ -18,7 +18,6 @@ add_file -type vhdl -lib ds parser.vhd
 add_file -type vhdl -lib ds injector.vhd
 add_file -type vhdl -lib ds composer.vhd
 add_file -type vhdl -lib ds resizer.vhd
-add_file -type vhdl -lib ds stream_fifo.vhd
 add_file -type vhdl -lib ds collector.vhd
 add_file -type vhdl -lib ds absorber.vhd
 add_file -type vhdl -lib ds arst_sync.vhd

@@ -21,12 +21,12 @@ use ds.types.all;
 
 entity collector is
   generic (
-    width      : integer;
-    user       : integer;
-    n          : integer := 1;
-    meta_width : integer;
-    max_offset : integer;  -- number of bits to buffer. it must be at least the number of bytes that the last "meta_valid" is away from the beginning (MTU + x in most cases).
-    overflow_protection: boolean := false
+    width               : integer;
+    user                : integer;
+    n                   : integer := 1;
+    meta_width          : integer;
+    max_offset          : integer;  -- number of bits to buffer. it must be at least the number of bytes that the last "meta_valid" is away from the beginning (MTU + x in most cases).
+    overflow_protection : boolean := false
     );
   port (
     clk, rst : in  std_logic;
@@ -50,9 +50,8 @@ entity collector is
 end;
 
 architecture net_collector_arch of collector is
-  signal fifo_ready, fifo_valid, reg_valid, reg_ready, reg_last : std_logic;
-  signal fifo_data                                              : std_logic_vector(in_data'range);
-  signal fifo_data_pre, reg_data                                : std_logic_vector(width + width / 8 - 2 downto 0);
+  signal fifo_ready, fifo_valid : std_logic;
+  signal fifo_data              : std_logic_vector(in_data'range);
 
   signal in_first               : std_logic := '1';
   signal all_meta_latches_ready : std_logic;
@@ -115,48 +114,30 @@ begin
     end process;
     fifo_drop  <= '1' when state = DEADLOCK   else '0';
     latch_drop <= '1' when state = CLEAN_META else '0';
-    ignore   <= '1' when state /= IDLE      else '0';
+    ignore     <= '1' when state /= IDLE      else '0';
   end generate;
   fifo_inst : entity ds.fifo generic map (
-    width       => fifo_data_pre'length,
-    depth       => max_offset / width,
-    use_last    => true
-    -- packet_mode => overflow_protection,
-    -- drop_packet => overflow_protection,
-    -- max_packets => 1
+    width           => in_data'length,
+    depth           => max_offset / width,
+    use_last        => true,
+    use_keep        => true,
+    ignore_keep_msb => true,
+    outreg          => true
     ) port map (
       clk       => clk,
       rst       => rst,
       in_ready  => fifo_in_ready,
       in_valid  => fifo_in_valid,
-      in_data   => in_keep(in_keep'left - 1 downto 0) & in_data,
+      in_data   => in_data,
+      in_keep   => in_keep,
       in_last   => in_last,
       in_drop   => fifo_drop,
-      out_ready => reg_ready,
-      out_valid => reg_valid,
-      out_data  => reg_data,
-      out_last  => reg_last
-      );
-  fifo_reg_inst : entity ds.reg generic map (
-    width => fifo_data_pre'length
-    ) port map (
-      clk       => clk,
-      rst       => rst,
-      in_ready  => reg_ready,
-      in_valid  => reg_valid,
-      in_data   => reg_data,
-      in_last   => reg_last,
       out_ready => fifo_ready,
       out_valid => fifo_valid,
-      out_data  => fifo_data_pre,
+      out_data  => out_data,
+      out_keep  => out_keep,
       out_last  => out_last
       );
-  -- fsm_full: process(clk) begin
-  --   if rising_edge(clk) then
-  --   end if;
-  -- end process;
-  out_data <= fifo_data_pre(fifo_data'range);
-  out_keep <= "1" & fifo_data_pre(fifo_data_pre'left downto fifo_data'length);
 
   -- the collector architecture consists of the following three-phase setup: metadata goes into a meta_latch, then into
   -- a collector and finally into the output_latch. this architecture makes sure that one packet can be processed onto the

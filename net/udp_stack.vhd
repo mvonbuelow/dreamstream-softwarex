@@ -116,19 +116,18 @@ architecture udp_stack_arch of udp_stack is
     rdata(reg.rdata'range)
     ) := (others => axi4l_default(reg.araddr'length, reg.rdata'length));
 
-  signal txfifo_data, rxfifo_data                                                         : std_logic_vector(rx_data'range);
-  signal txfifo_data_pre, rxfifo_data_pre                                                 : std_logic_vector(rx_data'length + rx_keep'length - 2 downto 0);
-  signal txfifo_keep, rxfifo_keep                                                         : std_logic_vector(rx_keep'range) := (others => '1');
-  signal txfifo_valid, rxfifo_valid, txfifo_ready, rxfifo_ready, txfifo_last, rxfifo_last : std_logic;
-  signal txreg_data, rxreg_data                                                           : std_logic_vector(rx_data'range);
-  signal txreg_keep, rxreg_keep                                                           : std_logic_vector(rx_keep'range) := (others => '1');
-  signal txreg_valid, rxreg_valid, txreg_ready, rxreg_ready, txreg_last, rxreg_last       : std_logic;
-  signal rxfrontreg_data                                                                  : std_logic_vector(rx_data'range);
-  signal rxfrontreg_keep                                                                  : std_logic_vector(rx_keep'range) := (others => '1');
-  signal rxfrontreg_valid, rxfrontreg_ready, rxfrontreg_last                              : std_logic;
-  signal rxfrontreg_user                                                                  : std_logic_vector(0 downto 0);
-  signal int_rst                                                                          : std_logic;
-  signal drop                                                                             : std_logic;
+  signal txfifo_data                                                                : std_logic_vector(rx_data'range);
+  signal txfifo_keep                                                                : std_logic_vector(rx_keep'range) := (others => '1');
+  signal txfifo_valid, txfifo_ready, txfifo_last                                    : std_logic;
+  signal txreg_data, rxreg_data                                                     : std_logic_vector(rx_data'range);
+  signal txreg_keep, rxreg_keep                                                     : std_logic_vector(rx_keep'range) := (others => '1');
+  signal txreg_valid, rxreg_valid, txreg_ready, rxreg_ready, txreg_last, rxreg_last : std_logic;
+  signal rxfrontreg_data                                                            : std_logic_vector(rx_data'range);
+  signal rxfrontreg_keep                                                            : std_logic_vector(rx_keep'range) := (others => '1');
+  signal rxfrontreg_valid, rxfrontreg_ready, rxfrontreg_last                        : std_logic;
+  signal rxfrontreg_user                                                            : std_logic_vector(0 downto 0);
+  signal int_rst                                                                    : std_logic;
+  signal drop                                                                       : std_logic;
 begin
   addr_regs : block
     signal ipmux, maskmux : std_logic_vector(31 downto 0);
@@ -165,40 +164,24 @@ begin
   --     );
 
   rxfifo_inst : entity ds.fifo generic map (
-    width       => width + width / 8 - 1,
-    depth       => 256 * 64 / width,
-    use_last    => true,
-    packet_mode => true,
-    drop_packet => true,
-    max_packets => 2
+    width           => width,
+    depth           => 256 * 64 / width,
+    use_last        => true,
+    packet_mode     => true,
+    drop_packet     => true,
+    max_packets     => 2,
+    outreg          => true,
+    use_keep        => true,
+    ignore_keep_msb => true
     ) port map (
       clk       => clk,
       rst       => int_rst,
       in_ready  => rx_ready,
       in_valid  => rx_valid,
-      in_data   => rx_keep(rx_keep'left - 1 downto 0) & rx_data,
+      in_data   => rx_data,
+      in_keep   => rx_keep,
       in_last   => rx_last,
       in_drop   => drop,
-      out_ready => rxfifo_ready,
-      out_valid => rxfifo_valid,
-      out_data  => rxfifo_data_pre,
-      out_last  => rxfifo_last
-      );
-
-  drop        <= '1' when (rx_valid = '1' and rx_ready = '0' and drop_if_full) else '0';  --(rx_valid = '1' and rx_user(0) = '1') or 
-  rxfifo_data <= rxfifo_data_pre(rxfifo_data'range);
-  rxfifo_keep <= "1" & rxfifo_data_pre(rxfifo_data_pre'left downto rxfifo_data'length);
-
-  rxreg_inst : entity ds.reg generic map (
-    width => width
-    ) port map (
-      clk       => clk,
-      rst       => int_rst,
-      in_ready  => rxfifo_ready,
-      in_valid  => rxfifo_valid,
-      in_data   => rxfifo_data,
-      in_last   => rxfifo_last,
-      in_keep   => rxfifo_keep,
       out_ready => rxreg_ready,
       out_valid => rxreg_valid,
       out_data  => rxreg_data,
@@ -206,26 +189,30 @@ begin
       out_keep  => rxreg_keep
       );
 
+  drop <= '1' when (rx_valid = '1' and rx_ready = '0' and drop_if_full) else '0';  --(rx_valid = '1' and rx_user(0) = '1') or 
+
   txfifo_inst : entity ds.fifo generic map (
-    width       => width + width / 8 - 1,
-    depth       => 256 * 64 / width,
-    use_last    => true,
-    packet_mode => true,
-    max_packets => 2
+    width           => width,
+    depth           => 256 * 64 / width,
+    use_last        => true,
+    packet_mode     => true,
+    max_packets     => 2,
+    use_keep        => true,
+    ignore_keep_msb => true
     ) port map (
       clk       => clk,
       rst       => int_rst,
       in_ready  => txfifo_ready,
       in_valid  => txfifo_valid,
-      in_data   => txfifo_keep(txfifo_keep'left - 1 downto 0) & txfifo_data,
+      in_data   => txfifo_data,
+      in_keep   => txfifo_keep,
       in_last   => txfifo_last,
       out_ready => txreg_ready,
       out_valid => txreg_valid,
-      out_data  => txfifo_data_pre,
+      out_data  => txreg_data,
+      out_keep  => txreg_keep,
       out_last  => txreg_last
       );
-  txreg_data <= txfifo_data_pre(tx_data'range);
-  txreg_keep <= "1" & txfifo_data_pre(txfifo_data_pre'left downto tx_data'length);
   txreg_inst : entity ds.reg2 generic map (
     width => width
     ) port map (
