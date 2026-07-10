@@ -28,7 +28,9 @@ entity udp_stack is
     ntx          : integer;
     nrx          : integer;
     tx_ports     : std_logic_vector_array(0 to ntx - 1)(15 downto 0);
-    rx_ports     : std_logic_vector_array(0 to nrx - 1)(15 downto 0)
+    rx_ports     : std_logic_vector_array(0 to nrx - 1)(15 downto 0);
+    rxfifo       : boolean := true;
+    txfifo       : boolean := true
     );
   port (
     clk         : in std_logic;
@@ -163,72 +165,87 @@ begin
   --     out_user  => rxfrontreg_user
   --     );
 
-  rxfifo_inst : entity ds.fifo generic map (
-    width           => width,
-    depth           => 256 * 64 / width,
-    use_last        => true,
-    packet_mode     => true,
-    drop_packet     => true,
-    max_packets     => 2,
-    outreg          => true,
-    use_keep        => true,
-    ignore_keep_msb => true
-    ) port map (
-      clk       => clk,
-      rst       => int_rst,
-      in_ready  => rx_ready,
-      in_valid  => rx_valid,
-      in_data   => rx_data,
-      in_keep   => rx_keep,
-      in_last   => rx_last,
-      in_drop   => drop,
-      out_ready => rxreg_ready,
-      out_valid => rxreg_valid,
-      out_data  => rxreg_data,
-      out_last  => rxreg_last,
-      out_keep  => rxreg_keep
-      );
+  ifrxfifo : if rxfifo generate
+    rxfifo_inst : entity ds.fifo generic map (
+      width           => width,
+      depth           => 256 * 64 / width,
+      use_last        => true,
+      packet_mode     => true,
+      drop_packet     => true,
+      max_packets     => 2,
+      outreg          => true,
+      use_keep        => true,
+      ignore_keep_msb => true
+      ) port map (
+        clk       => clk,
+        rst       => int_rst,
+        in_ready  => rx_ready,
+        in_valid  => rx_valid,
+        in_data   => rx_data,
+        in_keep   => rx_keep,
+        in_last   => rx_last,
+        in_drop   => drop,
+        out_ready => rxreg_ready,
+        out_valid => rxreg_valid,
+        out_data  => rxreg_data,
+        out_last  => rxreg_last,
+        out_keep  => rxreg_keep
+        );
+    drop <= '1' when (rx_valid = '1' and rx_ready = '0' and drop_if_full) else '0';  --(rx_valid = '1' and rx_user(0) = '1') or 
+  else generate
+    rx_ready    <= rxreg_ready;
+    rxreg_valid <= rx_valid;
+    rxreg_data  <= rx_data;
+    rxreg_keep  <= rx_keep;
+    rxreg_last  <= rx_last;
+  end generate;
 
-  drop <= '1' when (rx_valid = '1' and rx_ready = '0' and drop_if_full) else '0';  --(rx_valid = '1' and rx_user(0) = '1') or 
-
-  txfifo_inst : entity ds.fifo generic map (
-    width           => width,
-    depth           => 256 * 64 / width,
-    use_last        => true,
-    packet_mode     => true,
-    max_packets     => 2,
-    use_keep        => true,
-    ignore_keep_msb => true
-    ) port map (
-      clk       => clk,
-      rst       => int_rst,
-      in_ready  => txfifo_ready,
-      in_valid  => txfifo_valid,
-      in_data   => txfifo_data,
-      in_keep   => txfifo_keep,
-      in_last   => txfifo_last,
-      out_ready => txreg_ready,
-      out_valid => txreg_valid,
-      out_data  => txreg_data,
-      out_keep  => txreg_keep,
-      out_last  => txreg_last
-      );
-  txreg_inst : entity ds.reg2 generic map (
-    width => width
-    ) port map (
-      clk       => clk,
-      rst       => int_rst,
-      in_ready  => txreg_ready,
-      in_valid  => txreg_valid,
-      in_data   => txreg_data,
-      in_last   => txreg_last,
-      in_keep   => txreg_keep,
-      out_ready => tx_ready,
-      out_valid => tx_valid,
-      out_data  => tx_data,
-      out_last  => tx_last,
-      out_keep  => tx_keep
-      );
+  iftxfifo : if txfifo generate
+    txfifo_inst : entity ds.fifo generic map (
+      width           => width,
+      depth           => 256 * 64 / width,
+      use_last        => true,
+      packet_mode     => true,
+      max_packets     => 2,
+      use_keep        => true,
+      ignore_keep_msb => true
+      ) port map (
+        clk       => clk,
+        rst       => int_rst,
+        in_ready  => txfifo_ready,
+        in_valid  => txfifo_valid,
+        in_data   => txfifo_data,
+        in_keep   => txfifo_keep,
+        in_last   => txfifo_last,
+        out_ready => txreg_ready,
+        out_valid => txreg_valid,
+        out_data  => txreg_data,
+        out_keep  => txreg_keep,
+        out_last  => txreg_last
+        );
+    txreg_inst : entity ds.reg2 generic map (
+      width => width
+      ) port map (
+        clk       => clk,
+        rst       => int_rst,
+        in_ready  => txreg_ready,
+        in_valid  => txreg_valid,
+        in_data   => txreg_data,
+        in_last   => txreg_last,
+        in_keep   => txreg_keep,
+        out_ready => tx_ready,
+        out_valid => tx_valid,
+        out_data  => tx_data,
+        out_last  => tx_last,
+        out_keep  => tx_keep
+        );
+  else generate
+    txfifo_ready <= tx_ready;
+    tx_valid     <= txfifo_valid;
+    tx_data      <= txfifo_data;
+    tx_keep      <= txfifo_keep;
+    tx_last      <= txfifo_last;
+  end generate;
 
   crossbar_inst : entity dsbus.crossbar generic map (
     addr_off => 10,

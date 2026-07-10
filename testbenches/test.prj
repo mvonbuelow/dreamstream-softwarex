@@ -1,7 +1,6 @@
 process_compileconfig [dict create top "tb"]
 
 load_module nvc
-load_module simmac
 
 pipeline_add sim
 
