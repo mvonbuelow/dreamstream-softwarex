@@ -7,17 +7,14 @@ cd workdir
 
 # Common width/frequency configurations
 configs="
-512 322000
-256 644000
+512 195312
+256 390625
 64 156250
 8 125000
 "
 
-# TX packet sizes
 tx_sizes="1472 736 368 184 92"
-
-# RX packet sizes
-rx_sizes="1514 778 410 226 134"
+rx_sizes="1472 736 368 184 92"
 
 # TX configurations
 echo "rxtx,width,freq,packet_size,latency"

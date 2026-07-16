@@ -60,11 +60,13 @@ architecture latency_measure_arch of latency_measure is
     rdata(31 downto 0)
     ) := axi4l_default(32, 32);
 
-  signal idx                 : integer                                                             := 0;
-  signal packet_data         : std_logic_vector(2048 * 8 - 1 downto 0)                             := (others => '0');
-  constant packet_keep_ones  : std_logic_vector(packet_size - 1 downto 0)                          := (others => '1');
-  constant packet_keep_zeros : std_logic_vector(packet_data'length / 8 - packet_size - 1 downto 0) := (others => '0');
-  signal packet_keep         : std_logic_vector(2047 downto 0)                                     := packet_keep_ones & packet_keep_zeros;
+  constant total_packet_size : integer := packet_size + nprepend / 8;
+
+  signal idx                 : integer                                                                   := 0;
+  signal packet_data         : std_logic_vector(2048 * 8 - 1 downto 0)                                   := (others => '0');
+  constant packet_keep_ones  : std_logic_vector(total_packet_size - 1 downto 0)                          := (others => '1');
+  constant packet_keep_zeros : std_logic_vector(packet_data'length / 8 - total_packet_size - 1 downto 0) := (others => '0');
+  signal packet_keep         : std_logic_vector(2047 downto 0)                                           := packet_keep_ones & packet_keep_zeros;
 
   signal packet_ready, packet_valid : std_logic;
 

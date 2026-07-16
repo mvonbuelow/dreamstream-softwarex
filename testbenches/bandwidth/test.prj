@@ -1,0 +1,13 @@
+process_compileconfig [dict create top "tb" packet_size 1472 width 8 freq 125000 nsamples 16]
+
+load_module nvc
+
+pipeline_add sim
+
+add_file -type prj ../../ds.prj
+add_file -type prj ../../net/dsnet.prj
+add_file -type prj ../../bus/dsbus.prj
+
+add_file -type vhdl bandwidth_measure.vhd
+
+add_file -type vhdl $::top.vhd
