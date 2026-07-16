@@ -53,68 +53,68 @@ library ds;
 
 entity resync is
   generic (
-    width : positive
-    );
+    width: positive
+  );
   port (
-    in_clk, arst : in  std_ulogic;
-    in_ready     : out std_ulogic                            := '0';
-    in_valid     : in  std_ulogic;
-    in_data      : in  std_ulogic_vector(width - 1 downto 0);
-    --# {{}}
-    out_clk      : in  std_ulogic;
-    out_ready    : in  std_ulogic;
-    out_valid    : out std_ulogic                            := '0';
-    out_data     : out std_ulogic_vector(width - 1 downto 0) := (others => '0')
-    );
+    in_clk, arst: in std_ulogic;
+    in_ready: out std_ulogic := '0';
+    in_valid: in std_ulogic;
+    in_data: in std_ulogic_vector(width - 1 downto 0);
+  --# {{}}
+    out_clk: in std_ulogic;
+    out_ready: in std_ulogic;
+    out_valid: out std_ulogic := '0';
+    out_data: out std_ulogic_vector(width - 1 downto 0) := (others => '0')
+  );
 end entity;
 
 architecture a of resync is
-  attribute dont_touch : string;
-  attribute async_reg  : string;
+  attribute dont_touch: string;
+  attribute async_reg: string;
 
-  signal in_data_sampled, out_data_int : std_ulogic_vector(in_data'range) := (others => '0');
+  signal in_data_sampled, out_data_int: std_ulogic_vector(in_data'range) := (others => '0');
 
   -- We apply constraints to these two signals, and they are crucial for the function of the CDC.
   -- Do not allow the tool to optimize these or move any logic.
-  attribute dont_touch of in_data_sampled : signal is "true";
-  attribute dont_touch of out_data_int    : signal is "true";
+  attribute dont_touch of in_data_sampled: signal is "true";
+  attribute dont_touch of out_data_int: signal is "true";
 
-  signal in_level_p1                                  : std_ulogic := '0';
-  signal out_level_m1, out_level, out_level_handshake : std_ulogic := '0';
+  signal in_level_p1: std_ulogic := '0';
+  signal out_level_m1, out_level, out_level_handshake: std_ulogic := '0';
   -- Different default value than the others, to trigger the first 'in_ready' event.
-  signal in_level_m1, in_level, out_level_feedback    : std_ulogic := '1';
+  signal in_level_m1, in_level, out_level_feedback: std_ulogic := '1';
 
   -- These two feed async_reg chains, and it is absolutely crucial that they are driven by FFs.
   -- So place attribute on them so that build tool does not optimize/modify anything.
-  attribute dont_touch of in_level_p1        : signal is "true";
-  attribute dont_touch of out_level_feedback : signal is "true";
+  attribute dont_touch of in_level_p1: signal is "true";
+  attribute dont_touch of out_level_feedback: signal is "true";
 
   -- Ensure FFs are not optimized/modified, and placed in the same slice to minimize MTBF.
-  attribute async_reg of in_level_m1  : signal is "true";
-  attribute async_reg of in_level     : signal is "true";
-  attribute async_reg of out_level_m1 : signal is "true";
-  attribute async_reg of out_level    : signal is "true";
+  attribute async_reg of in_level_m1: signal is "true";
+  attribute async_reg of in_level: signal is "true";
+  attribute async_reg of out_level_m1: signal is "true";
+  attribute async_reg of out_level: signal is "true";
 
-  signal in_rst, out_rst : std_logic;
+  signal in_rst, out_rst: std_logic;
 begin
 
-  arst_sync_in_inst : entity ds.arst_sync port map (
-    clk  => in_clk,
+  arst_sync_in_inst: entity ds.arst_sync port map (
+    clk => in_clk,
     arst => arst,
-    rst  => in_rst
-    );
-  arst_sync_out_inst : entity ds.arst_sync port map (
-    clk  => out_clk,
+    rst => in_rst
+  );
+  arst_sync_out_inst: entity ds.arst_sync port map (
+    clk => out_clk,
     arst => arst,
-    rst  => out_rst
-    );
+    rst => out_rst
+  );
 
   ------------------------------------------------------------------------------
-  handle_input : process(in_clk)
+  handle_input: process(in_clk)
   begin
     if rising_edge(in_clk) then
       if in_rst = '1' then
-        in_level    <= '1';
+        in_level <= '1';
         in_level_m1 <= '1';
         in_level_p1 <= '0';
       else
@@ -134,7 +134,7 @@ begin
         end if;
 
         -- CDC path into async_reg chain.
-        in_level    <= in_level_m1;
+        in_level <= in_level_m1;
         in_level_m1 <= out_level_feedback;
       end if;
     end if;
@@ -144,14 +144,14 @@ begin
 
 
   ------------------------------------------------------------------------------
-  handle_result : process(out_clk)
+  handle_result: process(out_clk)
   begin
     if rising_edge(out_clk) then
       if out_rst = '1' then
-        out_valid           <= '0';
-        out_level_feedback  <= '1';
-        out_level_m1        <= '0';
-        out_level           <= '0';
+        out_valid <= '0';
+        out_level_feedback <= '1';
+        out_level_m1 <= '0';
+        out_level <= '0';
         out_level_handshake <= '0';
       else
         -- A new result level means that there is new data sampled on the 'input' side.
@@ -179,7 +179,7 @@ begin
         end if;
 
         -- CDC path into async_reg chain.
-        out_level    <= out_level_m1;
+        out_level <= out_level_m1;
         out_level_m1 <= in_level_p1;
       end if;
     end if;

@@ -20,25 +20,25 @@ use ds.types.all;
 
 entity absorber is
   port (
-    clk, rst : in std_logic;
+    clk, rst: in std_logic;
 
-    in_valid  : in  std_logic;
-    in_ready  : out std_logic;
-    in_last   : in  std_logic;
-    in_absorb : in  std_logic;
+    in_valid: in std_logic;
+    in_ready: out std_logic;
+    in_last: in std_logic;
+    in_absorb: in std_logic;
 
-    out_valid : out std_logic;
-    out_ready : in  std_logic
-    );
+    out_valid: out std_logic;
+    out_ready: in std_logic
+  );
 end;
 
 architecture absorber_arch of absorber is
-  signal absorb : std_logic := '0';
+  signal absorb: std_logic := '0';
 begin
-  in_ready  <= out_ready or absorb;
+  in_ready <= out_ready or absorb;
   out_valid <= in_valid and not absorb;
 
-  proc : process(clk)
+  proc: process(clk)
   begin
     if rising_edge(clk) then
       if rst = '1' then
