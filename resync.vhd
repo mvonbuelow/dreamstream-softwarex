@@ -60,7 +60,7 @@ entity resync is
     in_ready: out std_ulogic := '0';
     in_valid: in std_ulogic;
     in_data: in std_ulogic_vector(width - 1 downto 0);
-  --# {{}}
+    --# {{}}
     out_clk: in std_ulogic;
     out_ready: in std_ulogic;
     out_valid: out std_ulogic := '0';

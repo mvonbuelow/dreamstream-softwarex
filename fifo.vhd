@@ -29,15 +29,15 @@ entity fifo is
     outreg: boolean := false;
     almost_full_threshold: integer := 0;
 
-  -- tkeep handling
+    -- tkeep handling
     use_keep: boolean := false;
     ignore_keep_msb: boolean := true; -- saves one bit :)
 
-  -- tuser handling
+    -- tuser handling
     integrate_user: boolean := false;
     user: integer := 0;
 
-  -- packet mode
+    -- packet mode
     use_last: boolean := false;
     packet_mode: boolean := false;
     drop_packet: boolean := false;

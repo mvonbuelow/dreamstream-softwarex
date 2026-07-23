@@ -30,7 +30,7 @@ entity icmp is
     in_keep: in std_logic_vector(width / 8 - 1 downto 0);
     in_last: in std_logic;
     in_id: in std_logic_vector(79 downto 0);
-  -- in_user : in std_logic_vector(15 downto 0);
+    -- in_user : in std_logic_vector(15 downto 0);
 
     out_ready: in std_logic;
     out_valid: out std_logic;

@@ -43,18 +43,18 @@ library ds;
 entity resync_counter is
   generic (
     width: positive;
-  -- Initial value for the output that will be set for a few cycles before the first input
-  -- value has propagated.
+    -- Initial value for the output that will be set for a few cycles before the first input
+    -- value has propagated.
     default_value: unsigned(width - 1 downto 0) := (others => '0');
-  -- Optional pipeline step on the output after Gray conversion
-  -- This CDC topology fails if the input counter jumps by more than one each clock cycle.
-  -- Optionally disable the assertion that this never happens.
+    -- Optional pipeline step on the output after Gray conversion
+    -- This CDC topology fails if the input counter jumps by more than one each clock cycle.
+    -- Optionally disable the assertion that this never happens.
     assert_false_on_counter_jumps: boolean := true
   );
   port (
     clk_in, rst_in: in std_logic;
     counter_in: in unsigned(default_value'range);
-  --# {{}}
+    --# {{}}
     clk_out, rst_out: in std_logic;
     counter_out: out unsigned(default_value'range) := default_value
   );
