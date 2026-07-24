@@ -77,7 +77,7 @@ begin
             if mngr.rvalid = '1' and mngr.rready = '1' then
               state <= WAIT_FOR_ADDR;
             end if;
-          end case;
+        end case;
       end if;
     end process;
   end block;
@@ -128,7 +128,7 @@ begin
             if mngr.bvalid = '1' and mngr.bready = '1' then
               state <= WAIT_FOR_ADDR_OR_DATA;
             end if;
-          end case;
+        end case;
       end if;
     end process;
   end block;

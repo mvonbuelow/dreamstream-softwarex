@@ -121,7 +121,7 @@ begin
           if intmngr.rvalid = '1' and intmngr.rready = '1' then
             rstate_next <= IDLE;
           end if;
-        end case;
+      end case;
     end process;
   end block;
   bl_write: block
@@ -224,7 +224,7 @@ begin
           if intmngr.bvalid = '1' and intmngr.bready = '1' then
             wstate_next <= IDLE;
           end if;
-        end case;
+      end case;
     end process;
   end block;
 end architecture;

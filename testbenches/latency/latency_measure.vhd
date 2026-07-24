@@ -160,7 +160,7 @@ begin
                 idx <= (idx + 1) mod 128;
                 waittimer <= 0;
               end if;
-            end case;
+          end case;
         end if;
       end if;
     end process;
@@ -198,7 +198,7 @@ begin
                   s <= s + dt;
                 end if;
               end if;
-            end case;
+          end case;
         end if;
       end if;
     end process;

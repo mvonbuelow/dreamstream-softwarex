@@ -149,7 +149,7 @@ begin
               state <= D;
             end if;
           when FIN =>
-          end case;
+        end case;
       end if;
     end if;
   end process;
@@ -345,7 +345,7 @@ begin
               if tlv_ready = '1' then
                 state <= T;
               end if;
-            end case;
+          end case;
         end if;
       end if;
     end process;

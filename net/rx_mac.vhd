@@ -90,7 +90,7 @@ begin
             if out_last = '1' then
               state <= IDLE;
             end if;
-          end case;
+        end case;
       end if;
     end if;
   end process;

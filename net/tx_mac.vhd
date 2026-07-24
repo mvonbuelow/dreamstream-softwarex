@@ -188,7 +188,7 @@ begin
         -- 
       when FORCE_IDLE =>
         state_next <= IDLE_L0 when iw = 2 else IDLE_L4;
-      end case;
+    end case;
   end process;
 
   in_data_shifted <= in_data when state = LANE0 else in_data_r & in_data(63 downto 32);

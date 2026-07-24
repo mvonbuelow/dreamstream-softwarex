@@ -108,7 +108,7 @@ begin
               if latch_valid = '1' then
                 state <= IDLE;
               end if;
-            end case;
+          end case;
         end if;
       end if;
     end process;

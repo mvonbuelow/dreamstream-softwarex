@@ -108,7 +108,7 @@ begin
                 sel <= sel_next;
               end if;
             end if;
-          end case;
+        end case;
       end if;
     end if;
   end process;

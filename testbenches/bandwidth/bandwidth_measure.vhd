@@ -139,7 +139,7 @@ begin
                 report "Bandwidth: " & to_string(real(nvalid * 8) / (dt * 1000.0 / freq)); -- bits per ns == Mb/s
                 finished <= '1';
               end if;
-            end case;
+          end case;
         end if;
       end if;
     end process;

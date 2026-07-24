@@ -97,7 +97,7 @@ begin
             if composer_ready = '1' then
               state <= REQ;
             end if;
-          end case;
+        end case;
       end if;
     end if;
   end process;

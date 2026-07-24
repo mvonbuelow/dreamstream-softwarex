@@ -200,7 +200,7 @@ begin
                   timeoutctr <= timeoutctr + 1;
                 end if;
               end if;
-            end case;
+          end case;
         end if;
       end if;
     end process;
@@ -257,7 +257,7 @@ begin
               if out_valid = '1' and out_ready = '1' and out_last = '1' then
                 state <= IDLE;
               end if;
-            end case;
+          end case;
         end if;
       end if;
     end process;

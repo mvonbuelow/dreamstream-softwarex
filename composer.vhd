@@ -86,7 +86,7 @@ begin
             if out_valid = '1' and out_ready = '1' and out_last = '1' then
               state <= COMP;
             end if;
-          end case;
+        end case;
       end if;
     end if;
   end process;

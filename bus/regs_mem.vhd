@@ -173,7 +173,7 @@ begin
           if subs(i).rvalid = '1' and subs(i).rready = '1' then
             rstate_next <= IDLE;
           end if;
-        end case;
+      end case;
     end process;
     wreg_proc_sync: process(clk)
     begin
@@ -207,7 +207,7 @@ begin
           if subs(i).bvalid = '1' and subs(i).bready = '1' then
             wstate_next <= IDLE;
           end if;
-        end case;
+      end case;
     end process;
   end generate;
 end architecture;
