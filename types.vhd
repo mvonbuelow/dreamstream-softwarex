@@ -75,7 +75,7 @@ package body types is
     end if;
   end function;
   function u2hex(uin: unsigned) return string is
-    variable res: string( (uin'length + 3) / 4 downto 1);
+    variable res: string((uin'length + 3) / 4 downto 1);
     constant chex: string := "0123456789ABCDEF";
   begin
     for i in res'reverse_range loop

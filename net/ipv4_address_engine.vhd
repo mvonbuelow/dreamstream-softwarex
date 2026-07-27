@@ -108,10 +108,10 @@ begin
     constant ticks_ms: integer := integer(clk_freq * 1000.0);
     signal clk_en_sec: std_logic := '0';
     --signal timectr_ms             : integer range 0 to ticks_ms - 1 := 0;
-    signal timectr_ms: unsigned( (log2_ceil(ticks_ms + 1) - 1) downto 0) := (others => '0');
+    signal timectr_ms: unsigned((log2_ceil(ticks_ms + 1) - 1) downto 0) := (others => '0');
     constant ticks: integer := integer(igmp_refresh / 1 ms);
     --signal timeoutctr              : integer range 0 to ticks - 1;
-    signal timeoutctr: unsigned( (log2_ceil(ticks + 1) - 1) downto 0) := (others => '0');
+    signal timeoutctr: unsigned((log2_ceil(ticks + 1) - 1) downto 0) := (others => '0');
     signal ip_eof: std_logic;
     signal checksum, checksum_next: unsigned(15 downto 0);
     constant igmp_magic: std_logic_vector(15 downto 0) := x"1600";

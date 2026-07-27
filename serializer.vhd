@@ -109,8 +109,8 @@ begin
       signal in_keep_set: std_logic;
     begin
       in_keep_set <= or in_keep(out_width / keep_width * (i + 1) - 1 downto out_width / keep_width * i) when i /= parts - 1 else '1'; -- don't elimiate the complete packet
-      in_data_i(parts - 1 - i) <= in_data( (i + 1) * out_width - 1 downto i * out_width);
-      in_keep_i(parts - 1 - i) <= in_keep( (i + 1) * out_width / keep_width - 1 downto i * out_width / keep_width);
+      in_data_i(parts - 1 - i) <= in_data((i + 1) * out_width - 1 downto i * out_width);
+      in_keep_i(parts - 1 - i) <= in_keep((i + 1) * out_width / keep_width - 1 downto i * out_width / keep_width);
       in_keep_valid(parts - 1 - i) <= in_keep_set and in_valid;
       if0: if i /= 0 generate
         last_bit(parts - 1 - i) <= not (or in_keep(out_width / keep_width * i - 1 downto out_width / keep_width * (i - 1)));

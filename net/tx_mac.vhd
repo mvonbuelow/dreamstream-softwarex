@@ -61,7 +61,7 @@ architecture tx_mac_aligner_arch of tx_mac_aligner is
   begin
     normalized := data;
     for i in 0 to num_chunks - 1 loop
-      result( (i + 1) * width - 1 downto i * width) := normalized( (num_chunks - i) * width - 1 downto(num_chunks - i - 1) * width);
+      result((i + 1) * width - 1 downto i * width) := normalized((num_chunks - i) * width - 1 downto(num_chunks - i - 1) * width);
     end loop;
     return result;
   end function;

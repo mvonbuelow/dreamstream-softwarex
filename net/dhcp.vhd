@@ -67,7 +67,7 @@ architecture net_dhcp_arch of dhcp is
   signal timeout: unsigned(27 downto 0) := (others => '0');
   signal xid: std_logic_vector(31 downto 0);
 
-  signal parser_user: std_logic_vector( (11 * 4 + 192 + 4) * 8 - 1 downto 0);
+  signal parser_user: std_logic_vector((11 * 4 + 192 + 4) * 8 - 1 downto 0);
   signal composer_user: std_logic_vector(parser_user'length + (21 + my_name'length + 2 + vendor_bytes) * 8 - 1 downto 0);
   signal composer_valid, composer_ready: std_logic;
   signal si_or_pad: std_logic_vector(47 downto 0);
@@ -238,7 +238,8 @@ begin
       x"63825363" -- & -- magic cookie
       -- x"3501" & expected_type
   );
-  serializer_inst: entity ds.serializer generic map (-- now it gets slow... we must parse TVL on byte level... what a mess...
+  serializer_inst: entity ds.serializer generic map (
+    -- now it gets slow... we must parse TVL on byte level... what a mess...
     width => width,
     out_width => 8,
     user => 32 + in_id'length
@@ -250,7 +251,7 @@ begin
     in_data => parser_data,
     in_keep => parser_keep,
     in_last => parser_last,
-    in_user => in_id & parser_user( (48 + 7) * 32 + 31 downto(48 + 7) * 32),
+    in_user => in_id & parser_user((48 + 7) * 32 + 31 downto(48 + 7) * 32),
     out_valid => ser_valid,
     out_ready => ser_ready,
     out_data => ser_data,
@@ -331,7 +332,7 @@ begin
                   if is_mask then
                     for i in 3 downto 0 loop
                       if i = idx then
-                        tlv_data( (3 - i) * 8 + 7 downto(3 - i) * 8) <= ser_data;
+                        tlv_data((3 - i) * 8 + 7 downto(3 - i) * 8) <= ser_data;
                       end if;
                     end loop;
                   end if;

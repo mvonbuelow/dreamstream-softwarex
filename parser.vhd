@@ -79,7 +79,7 @@ begin
     out_user => idx
   );
 
-  cur_err <= (parsing and ( (in_last = '1' and in_valid = '1' and in_keep(offset_bytes) /= '1') or (in_valid = '1' and in_last = '1' and not cur_last_word))) or cur_err_reg;
+  cur_err <= (parsing and ((in_last = '1' and in_valid = '1' and in_keep(offset_bytes) /= '1') or (in_valid = '1' and in_last = '1' and not cur_last_word))) or cur_err_reg;
   cur_err_next <= false when (in_valid = '1' and in_ready = '1' and in_last = '1') or rst = '1' else cur_err;
   cur_err_reg <= cur_err_next when rising_edge(clk);
 

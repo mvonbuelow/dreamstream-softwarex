@@ -28,13 +28,13 @@ entity treemux is
   );
   port (
     in_data: in std_logic_vector_array(0 to n - 1)(width - 1 downto 0) := (others => (others => '0'));
-    in_keep: in std_logic_vector_array(0 to n - 1)( (width + keep_width - 1) / keep_width - 1 downto 0) := (others => (others => '0'));
+    in_keep: in std_logic_vector_array(0 to n - 1)((width + keep_width - 1) / keep_width - 1 downto 0) := (others => (others => '0'));
     in_valid: in std_logic_vector(n - 1 downto 0) := (others => '1');
     in_last: in std_logic_vector(n - 1 downto 0) := (others => '0');
     in_user: in std_logic_vector_array(0 to n - 1)(user - 1 downto 0) := (others => (others => '0'));
 
     out_data: out std_logic_vector(width - 1 downto 0);
-    out_keep: out std_logic_vector( (width + keep_width - 1) / keep_width - 1 downto 0);
+    out_keep: out std_logic_vector((width + keep_width - 1) / keep_width - 1 downto 0);
     out_valid: out std_logic;
     out_last: out std_logic;
     out_user: out std_logic_vector(user - 1 downto 0);

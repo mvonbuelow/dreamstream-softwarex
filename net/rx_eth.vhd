@@ -53,7 +53,7 @@ architecture net_rx_eth_arch of rx_eth is
   signal out_x_dest: std_logic_vector(out_dest'range);
   signal out_x_id: std_logic_vector(out_id'range);
   signal out_x_user: std_logic_vector(out_user'range);
-  signal out_x_user_pre: std_logic_vector( (6 + 6 + 2) * 8 - 1 downto 0);
+  signal out_x_user_pre: std_logic_vector((6 + 6 + 2) * 8 - 1 downto 0);
   signal anno: std_logic_vector(log2_ceil(nethtypes + 1) downto 0);
 begin
   parser_inst: entity ds.parser generic map (

@@ -272,9 +272,9 @@ begin
       else
 
         if enable_drop then
-          num_lasts_written <= num_lasts_written + ite_i( (in_ready and in_valid and in_last and not in_drop) = '1', 1, 0);
+          num_lasts_written <= num_lasts_written + ite_i((in_ready and in_valid and in_last and not in_drop) = '1', 1, 0);
         else
-          num_lasts_written <= num_lasts_written + ite_i( (in_ready and in_valid and in_last) = '1', 1, 0);
+          num_lasts_written <= num_lasts_written + ite_i((in_ready and in_valid and in_last) = '1', 1, 0);
         end if;
 
         in_ready <= ite_l(out_addr_resync(bram_addr_range) /= in_addr_next_if_not_drop(bram_addr_range) or (out_addr_resync(out_addr_resync'high) = in_addr_next_if_not_drop(in_addr_next'high)), '1', '0');
@@ -290,7 +290,7 @@ begin
       end if;
     end process;
 
-    in_addr_next_if_not_drop <= in_addr + ite_i( (in_ready and in_valid) = '1', 1, 0);
+    in_addr_next_if_not_drop <= in_addr + ite_i((in_ready and in_valid) = '1', 1, 0);
     in_addr_next <= in_addr_start_of_packet when enable_drop and in_drop = '1' else in_addr_next_if_not_drop;
 
 
@@ -334,7 +334,7 @@ begin
         end if;
 
         if enable_packet_mode then
-          num_lasts_out_next := num_lasts_read + ite_i( (out_ready and out_valid and out_last) = '1', 1, 0);
+          num_lasts_out_next := num_lasts_read + ite_i((out_ready and out_valid and out_last) = '1', 1, 0);
           out_valid_pre <= ite_l(num_lasts_out_next /= num_lasts_written_resync, '1', '0');
 
           num_lasts_read <= num_lasts_out_next;
@@ -344,7 +344,7 @@ begin
       end if;
     end process;
 
-    out_addr_next <= out_addr + ite_i( (out_ready and out_valid) = '1', 1, 0);
+    out_addr_next <= out_addr + ite_i((out_ready and out_valid) = '1', 1, 0);
 
     out_valid <= out_valid_pre;
 

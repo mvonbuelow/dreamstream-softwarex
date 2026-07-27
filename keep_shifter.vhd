@@ -85,7 +85,7 @@ begin
     out_last <= shift_last when (in_keep(shift - 1) = '1' and in_valid = '1') or in_valid = '0' else in_last;
     out_user <= in_user; -- I think this is safe as we wait 1 cycle if we have last in the register
 
-    out_valid <= ( (in_valid or shift_last) and shift_valid) or (in_valid and in_keep(in_keep'left)) or (in_valid and in_last and in_keep(in_keep'left));
+    out_valid <= ((in_valid or shift_last) and shift_valid) or (in_valid and in_keep(in_keep'left)) or (in_valid and in_last and in_keep(in_keep'left));
     in_ready <= (not shift_valid and not in_keep(in_keep'left) and (in_keep(0) or in_last) and not shift_last) or -- in_keep(in_keep'left)='0', but in_keep(0) or in_last, happens when we fix a shift; input "00001111", e.g.
       (out_ready and not shift_last); -- shift_last means that we have a remainder from the last word and don't accept a new word in the current cycle.
 

@@ -58,7 +58,7 @@ architecture rx_mac_aligner_arch of rx_mac_aligner is
   begin
     normalized := data;
     for i in 0 to num_chunks - 1 loop
-      result( (i + 1) * width - 1 downto i * width) := normalized( (num_chunks - i) * width - 1 downto(num_chunks - i - 1) * width);
+      result((i + 1) * width - 1 downto i * width) := normalized((num_chunks - i) * width - 1 downto(num_chunks - i - 1) * width);
     end loop;
     return result;
   end function;
@@ -100,7 +100,7 @@ begin
     for i in 7 downto 0 loop
       if aligned_c_lookahead(i) = '1' then
         -- dbg <= aligned_d_lookahead(i * 8 + 7 downto i * 8);
-        out_user(31 downto 0) <= swap_chunks(aligned_d_lookahead( (i + 5) * 8 - 1 downto(i + 1) * 8), 8); -- FCS is not in network byte order
+        out_user(31 downto 0) <= swap_chunks(aligned_d_lookahead((i + 5) * 8 - 1 downto(i + 1) * 8), 8); -- FCS is not in network byte order
         if aligned_d_lookahead(i * 8 + 7 downto i * 8) /= eof then
           out_user(32) <= '1';
         end if;

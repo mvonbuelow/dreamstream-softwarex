@@ -43,7 +43,7 @@ architecture pod_arch of pod is
 begin
   bl_unicast: block
     constant check_mask: std_logic_vector(63 downto 0) := (others => '1');
-    signal pod_user: std_logic_vector( (6 + 6 + 2) * 8 + 5 * 32 + 64 + magic'length + 48 downto 0);
+    signal pod_user: std_logic_vector((6 + 6 + 2) * 8 + 5 * 32 + 64 + magic'length + 48 downto 0);
     signal pod_valid: std_logic;
   begin
     parser_inst: entity ds.parser generic map (
@@ -66,7 +66,7 @@ begin
   end block;
   bl_broadcast: block
     constant check_mask: std_logic_vector(63 downto 0) := (others => '1');
-    signal pod_user: std_logic_vector( (6 + 6 + 2) * 8 + 5 * 32 + 64 + magic'length downto 0);
+    signal pod_user: std_logic_vector((6 + 6 + 2) * 8 + 5 * 32 + 64 + magic'length downto 0);
     signal pod_valid: std_logic;
   begin
     parser_inst: entity ds.parser generic map (
@@ -89,7 +89,7 @@ begin
   end block;
   bl_old: block
     constant check_mask: std_logic_vector(63 downto 0) := (others => '1');
-    signal pod_user: std_logic_vector( (6 + 6 + 2) * 8 + 5 * 32 + 64 + magic'length downto 0);
+    signal pod_user: std_logic_vector((6 + 6 + 2) * 8 + 5 * 32 + 64 + magic'length downto 0);
     signal pod_valid: std_logic;
   begin
     parser_inst: entity ds.parser generic map (

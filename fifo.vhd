@@ -52,7 +52,7 @@ entity fifo is
     in_valid: in std_logic;
     in_data: in std_logic_vector(width - 1 downto 0);
     in_last: in std_logic := '0';
-    in_keep: in std_logic_vector( (width + 7) / 8 - 1 downto 0) := (others => '1');
+    in_keep: in std_logic_vector((width + 7) / 8 - 1 downto 0) := (others => '1');
     in_user: in std_logic_vector(user - 1 downto 0) := (others => '0');
     in_drop: in std_logic := '0';
 
@@ -60,7 +60,7 @@ entity fifo is
     out_valid: out std_logic;
     out_data: out std_logic_vector(width - 1 downto 0);
     out_last: out std_logic;
-    out_keep: out std_logic_vector( (width + 7) / 8 - 1 downto 0);
+    out_keep: out std_logic_vector((width + 7) / 8 - 1 downto 0);
     out_user: out std_logic_vector(user - 1 downto 0);
 
     almost_full: out std_logic
@@ -141,7 +141,8 @@ begin
   in_drop_gated <= in_drop when use_last and packet_mode else '0'; -- synthesizer-only logic; no actual gates
   do_absorption <= in_drop_gated when drop_absorb else '0';
   absorber_inst: entity ds.absorber
-    port map (-- will be optimized away if we take care of in_absorb
+    port map (
+      -- will be optimized away if we take care of in_absorb
       clk => in_clk_i,
       rst => in_rst_i,
       in_valid => in_valid_c,
