@@ -1,0 +1,9 @@
+indent_string = "  "
+force_newline_compound = true # make a newline after 'begin', 'is', etc.
+force_newline_stmt = true # one statement per line
+force_newline_parentheses = true
+force_newline_parentheses_threshold = 3 # don't add newlines for (1 + 1) or (others => '0') or (0 => '1', others => '0')
+table_alignment = false
+collapse_excess_newlines = true # \n\n\n -> \n\n
+space_before_colon = false # if you prefer proc_test : process(clk)...
+keyword_case = "lower" # upper, lower, preserve
