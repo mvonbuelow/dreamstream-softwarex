@@ -9,7 +9,6 @@
 -- Description: DHCP protocol.
 -------------------------------------------------------------------------------
 
-
 library ieee;
 use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
@@ -50,7 +49,6 @@ entity dhcp is
     have_ip: in std_logic
   );
 end;
-
 
 architecture net_dhcp_arch of dhcp is
   signal out_x_ready, out_x_valid, out_x_last: std_logic;
@@ -147,6 +145,7 @@ begin
             if timeout(timeout'left) = '1' then
               timeout <= (others => '0');
               state <= D;
+              id <= x"ffffffffffffffffffff0043";
             end if;
           when FIN =>
         end case;
