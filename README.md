@@ -5,6 +5,16 @@ DreamStream is a collection of reusable hardware modules for building high-perfo
 
 All interfaces are based on the AXI Stream standard, and every module is designed around a minimal, composable interface.
 
+## ⚠️ SoftwareX Fork
+This GitHub repository is a **fork maintained solely for the SoftwareX submission**.
+
+Please note that **pull requests and issues are not accepted in this repository**. All development and contributions take place in the main repository:
+
+https://codeberg.org/gsi-ee/dreamstream
+
+Please submit issues, pull requests, and other contributions there.
+
+
 ## Design Principles
 
 DreamStream follows three core principles:
