@@ -24,7 +24,8 @@ entity stream_checksum is
     width: integer;
     limit: integer := 0;
     mask_off, mask_len: integer := 0;
-    ones_comp: boolean := true
+    ones_comp: boolean := true;
+    split_at: integer := 128
   );
   port (
     clk, rst: in std_logic;
@@ -39,7 +40,6 @@ entity stream_checksum is
 end;
 
 architecture net_stream_checksum_arch of stream_checksum is
-  signal in_data_chksum, in_data_chksum_r, cur_chksum, next_chksum: unsigned(15 downto 0) := (others => '0');
   signal in_bigkeep: std_logic_vector(in_data'range);
   signal in_valid_r, in_valid_rr: std_logic;
   signal cur_last_word, cur_last_word_r, cur_last_word_rr: std_logic := '0';
@@ -55,9 +55,13 @@ architecture net_stream_checksum_arch of stream_checksum is
   constant idx_len: integer := log2_ceil(num_words + 1);
   signal idx: std_logic_vector(idx_len - 1 downto 0);
 
-  constant chksum_w: integer := ite_i(width >= 16, width, 16);
+  constant chksum_w_pre: integer := ite_i(width >= 16, width, 16);
+  constant chksum_w: integer := ite_i(chksum_w_pre > split_at, split_at, chksum_w_pre);
   signal idx_odd: std_logic;
-  signal chksum_in: std_logic_vector(chksum_w - 1 downto 0);
+  constant nsplits: integer := (width + split_at - 1) / split_at;
+  signal chksum_in: std_logic_vector(chksum_w * nsplits - 1 downto 0);
+  signal in_data_chksum, in_data_chksum_r: unsigned(16 * nsplits - 1 downto 0) := (others => '0');
+  signal cur_chksum, next_chksum: unsigned(15 downto 0) := (others => '0');
 
   signal ign: std_logic := '0';
 begin
@@ -146,12 +150,14 @@ begin
     end process;
     chksum_in <= in_data_r & x"00" when idx_odd = '0' else x"00" & in_data_r;
   end generate;
-  in_chksum_inst: entity dsnet.internet_checksum generic map (
-    width => chksum_w
-  ) port map (
-    data => unsigned(chksum_in),
-    chksum => in_data_chksum
-  );
+  forsplits: for i in 0 to nsplits - 1 generate
+    in_chksum_inst: entity dsnet.internet_checksum generic map (
+      width => chksum_w
+    ) port map (
+      data => unsigned(chksum_in(chksum_w * (i + 1) - 1 downto chksum_w * i)),
+      chksum => in_data_chksum(16 * (i + 1) - 1 downto 16 * i)
+    );
+  end generate;
   proc1: process(clk)
   begin
     if rising_edge(clk) then
@@ -166,12 +172,19 @@ begin
     end if;
   end process;
 
-  full_chksum_inst: entity dsnet.internet_checksum generic map (
-    width => 32
-  ) port map (
-    data => cur_chksum & in_data_chksum_r,
-    chksum => next_chksum
-  );
+  bl_full_chksum: block
+    constant full_w: integer := 16 + 16 * nsplits;
+    constant ceiled_w: integer := 2 ** log2_ceil(full_w);
+    signal in_pad: unsigned(ceiled_w - 1 downto 0) := (others => '0');
+  begin
+    in_pad(full_w - 1 downto 0) <= cur_chksum & in_data_chksum_r;
+    full_chksum_inst: entity dsnet.internet_checksum generic map (
+      width => ceiled_w
+    ) port map (
+      data => in_pad,
+      chksum => next_chksum
+    );
+  end block;
 
   proc_chksum: process(clk)
   begin
@@ -195,4 +208,3 @@ begin
     out_data <= std_logic_vector(next_chksum);
   end generate;
 end architecture;
-

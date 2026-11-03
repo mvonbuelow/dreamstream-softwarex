@@ -8,6 +8,25 @@
 --
 -- Description: Ethernet frame constructor.
 -------------------------------------------------------------------------------
+--
+--
+--
+-- preamble
+-- 0x55 0x55 0x55 0x55 0x55 0x55 0x55 [SFD = 0xd5]
+--
+-- FCS
+-- [32 bit]
+--
+--
+-- 4 sources:
+-- preamble, FCS, idle, data
+--
+-- 512 bit
+--
+-- 32 FCS + 96 ifg + 64 PREAMBLE
+--
+--
+-- [64 bit stream] [64 bit extra]
 
 library ieee;
 use ieee.std_logic_1164.all;
@@ -25,7 +44,6 @@ entity tx_mac_aligner is
 
     xgmii_d: out std_logic_vector(width - 1 downto 0);
     xgmii_c: out std_logic_vector(width / 8 - 1 downto 0);
-
 
     in_valid: in std_logic;
     in_data: in std_logic_vector(width - 1 downto 0);
@@ -111,7 +129,6 @@ begin
         ipg <= ipg_next;
       end if;
     end if;
-
   end process;
 
   proc_comb: process(all)
