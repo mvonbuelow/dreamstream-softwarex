@@ -140,7 +140,8 @@ begin
     out_valid => out_valid_i,
     out_ready => out_ready_i,
     out_last => out_last,
-    out_keep => out_keep
+    out_keep => out_keep,
+    fix_shift => true
   );
   ifshift: if offset_bytes /= 0 generate
     shifter_in_keep <= (others => '0') when cur_empty else pad_keep & in_keep(offset_bytes - 1 downto 0) when parsing else in_keep;
@@ -161,4 +162,3 @@ begin
   out_valid <= out_valid_i when not absorb_on_error else out_valid_i and not check_err;
   out_ready_i <= out_ready when not absorb_on_error else out_ready or check_err;
 end architecture;
-

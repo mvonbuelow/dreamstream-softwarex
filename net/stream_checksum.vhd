@@ -57,7 +57,7 @@ architecture net_stream_checksum_arch of stream_checksum is
 
   constant chksum_w_pre: integer := ite_i(width >= 16, width, 16);
   constant chksum_w: integer := ite_i(chksum_w_pre > split_at, split_at, chksum_w_pre);
-  signal idx_odd: std_logic;
+  signal idx_odd: std_logic := '0';
   constant nsplits: integer := (width + split_at - 1) / split_at;
   signal chksum_in: std_logic_vector(chksum_w * nsplits - 1 downto 0);
   signal in_data_chksum, in_data_chksum_r: unsigned(16 * nsplits - 1 downto 0) := (others => '0');

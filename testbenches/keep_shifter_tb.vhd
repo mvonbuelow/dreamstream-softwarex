@@ -21,6 +21,7 @@ architecture keep_shifter_tb_arch of keep_shifter_tb is
   signal in_keep, out_keep: std_logic_vector(w - 1 downto 0);
   signal in_data, out_data: std_logic_vector(dw - 1 downto 0);
   signal cur_test, cur_test_out: integer;
+  signal fix_shift: boolean := true;
 begin
   clk <= not clk and clk_en after clkp / 2;
 
@@ -35,8 +36,11 @@ begin
     out_valid => out_valid,
     out_ready => out_ready,
     out_last => out_last,
-    out_keep => out_keep
+    out_keep => out_keep,
+    fix_shift => fix_shift
   );
+
+  fix_shift <= in_keep(in_keep'left) = '0';
 
   process
   begin
@@ -72,7 +76,6 @@ begin
     in_valid <= '0';
     wait for clkp * 3;
 
-
     -- test 2
     cur_test <= 2;
     in_data <= x"1234567890ab0123";
@@ -101,8 +104,6 @@ begin
     end loop;
     in_valid <= '0';
     wait for clkp * 3;
-
-
 
     -- test 3
     cur_test <= 3;
@@ -185,7 +186,6 @@ begin
     end loop;
     in_valid <= '0';
     wait for clkp * 3;
-
 
     -- test 5: two continuous packets AND wait between with out_ready
     cur_test <= 5;
@@ -293,8 +293,6 @@ begin
     in_valid <= '0';
     wait for clkp * 3;
 
-
-
     -- test 7: two continuous packets
     cur_test <= 7;
     in_data <= x"1234567890ab0123";
@@ -401,7 +399,6 @@ begin
     in_valid <= '0';
     wait for clkp * 3;
 
-
     -- test 9: empty
     cur_test <= 9;
     in_data <= x"1234567890ab0123";
@@ -415,7 +412,6 @@ begin
     end loop;
     in_valid <= '0';
     wait for clkp * 3;
-
 
     wait for clkp * 40;
     clk_en <= '0';
@@ -447,7 +443,6 @@ begin
     assert out_keep = "11111100" and out_data(63 downto 16) = x"0123456789ab" and out_last = '1' report "invalid output 1.2: " & to_string(out_keep) & " " & to_hex_string(out_data);
     wait for clkp;
     assert out_valid = '0' report "output still valid";
-
 
     report "test 2" severity note;
     cur_test_out <= 2;
@@ -571,7 +566,6 @@ begin
     wait for clkp;
     assert out_valid = '0' report "output still valid";
 
-
     report "test 6" severity note;
     cur_test_out <= 6;
     wait for clkp * 1;
@@ -643,7 +637,6 @@ begin
     assert out_keep = "11000000" and out_data(63 downto 56) = x"01" and out_last = '1' report "invalid output 7.8: " & to_string(out_keep) & " " & to_hex_string(out_data);
     wait for clkp;
     assert out_valid = '0' report "output still valid";
-
 
     report "test 8" severity note;
     cur_test_out <= 8;

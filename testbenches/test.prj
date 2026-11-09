@@ -1,4 +1,4 @@
-process_compileconfig [dict create top "tb"]
+process_compileconfig [dict create top "tb" width 64]
 
 load_module nvc
 

@@ -7,7 +7,10 @@ use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
 use std.env.stop;
 
+library ds;
 library dsnet;
+
+use work.compileconfig.all;
 
 entity tx_ipv4_tb is
 end;
@@ -19,9 +22,14 @@ architecture tx_ipv4_tb_arch of tx_ipv4_tb is
   constant dw: integer := w * 8;
   constant clkp: time := 10 ns;
 
+  constant int_width: integer := string_to_integer(width);
+
   signal in_valid, in_ready, in_last, out_valid, out_ready, out_last: std_logic := '0';
+  signal in_valid_r, in_ready_r, in_last_r, out_valid_r, out_ready_r, out_last_r: std_logic := '0';
   signal in_keep, out_keep: std_logic_vector(w - 1 downto 0);
   signal in_data, out_data: std_logic_vector(dw - 1 downto 0);
+  signal in_keep_r, out_keep_r: std_logic_vector(int_width / 8 - 1 downto 0);
+  signal in_data_r, out_data_r: std_logic_vector(int_width - 1 downto 0);
   signal cur_test, cur_test_out: integer;
   signal in_id: std_logic_vector(31 downto 0) := (others => '0');
   signal in_dest: std_logic_vector(48 + 31 downto 0) := (others => '0');
@@ -31,18 +39,54 @@ architecture tx_ipv4_tb_arch of tx_ipv4_tb is
 begin
   clk <= not clk and clk_en after clkp / 2;
 
-  net_tx_ipv4_inst: entity dsnet.tx_ipv4 generic map (max_payload => 16) port map (
+  in_resizer: entity ds.resizer generic map (
+    width => dw,
+    out_width => int_width
+  ) port map (
     clk => clk,
     in_ready => in_ready,
     in_valid => in_valid,
     in_data => in_data,
     in_keep => in_keep,
     in_last => in_last,
+    out_ready => in_ready_r,
+    out_valid => in_valid_r,
+    out_data => in_data_r,
+    out_keep => in_keep_r,
+    out_last => in_last_r
+  );
+  out_resizer: entity ds.resizer generic map (
+    out_width => dw,
+    width => int_width
+  ) port map (
+    clk => clk,
+    in_ready => out_ready_r,
+    in_valid => out_valid_r,
+    in_data => out_data_r,
+    in_keep => out_keep_r,
+    in_last => out_last_r,
     out_ready => out_ready,
     out_valid => out_valid,
     out_data => out_data,
     out_keep => out_keep,
-    out_last => out_last,
+    out_last => out_last
+  );
+
+  net_tx_ipv4_inst: entity dsnet.tx_ipv4 generic map (
+    max_payload => 64,
+    width => int_width
+  ) port map (
+    clk => clk,
+    in_ready => in_ready_r,
+    in_valid => in_valid_r,
+    in_data => in_data_r,
+    in_keep => in_keep_r,
+    in_last => in_last_r,
+    out_ready => out_ready_r,
+    out_valid => out_valid_r,
+    out_data => out_data_r,
+    out_keep => out_keep_r,
+    out_last => out_last_r,
     out_dest => out_dest,
     out_user => out_user,
     in_id => in_id,
@@ -54,6 +98,7 @@ begin
   begin
     wait for clkp * 2;
     wait until rising_edge(clk);
+    -- wait for clkp - 1 ns;
 
     -- test 1: short frame
     cur_test <= 1;
@@ -120,25 +165,27 @@ begin
     in_valid <= '0';
     wait for clkp * 3;
 
-    -- test 4: 16 byte frame --> no fragmentation yet
+    -- test 4: 64 byte frame --> no fragmentation yet
     cur_test <= 4;
     in_data <= x"1234567890abcdef";
     in_keep <= "11111111";
     in_valid <= '1';
-    in_user(15 downto 0) <= x"0010";
+    in_user(15 downto 0) <= x"0040";
     in_user(23 downto 16) <= x"11";
     in_id(31 downto 0) <= x"0a0a0011";
     in_dest(31 downto 0) <= x"0a0a0010";
     in_dest(31 + 48 downto 32) <= (others => '0');
     in_last <= '0';
 
-    wait for clkp;
-    while in_ready = '0' loop
+    for i in 0 to 6 loop
       wait for clkp;
+      while in_ready = '0' loop
+        wait for clkp;
+      end loop;
+      in_data <= x"1122334455667788";
+      in_keep <= "11111111";
+      in_last <= '1' when i = 6 else '0';
     end loop;
-    in_data <= x"1122334455667788";
-    in_keep <= "11111111";
-    in_last <= '1';
 
     wait for clkp;
     while in_ready = '0' loop
@@ -147,24 +194,26 @@ begin
     in_valid <= '0';
     wait for clkp * 3;
 
-    -- test 5: 17 byte frame --> fragmentation
+    -- test 5: 65 byte frame --> fragmentation
     cur_test <= 5;
     in_data <= x"1234567890abcdef";
     in_keep <= "11111111";
     in_valid <= '1';
-    in_user(15 downto 0) <= x"0011";
+    in_user(15 downto 0) <= x"0041";
     in_user(23 downto 16) <= x"11";
     in_id(31 downto 0) <= x"0a0a0011";
     in_dest(31 downto 0) <= x"0a0a0010";
     in_dest(31 + 48 downto 32) <= (others => '0');
     in_last <= '0';
 
-    wait for clkp;
-    while in_ready = '0' loop
+    for i in 0 to 6 loop
       wait for clkp;
+      while in_ready = '0' loop
+        wait for clkp;
+      end loop;
+      in_data <= x"1122334455667788";
+      in_keep <= "11111111";
     end loop;
-    in_data <= x"1122334455667788";
-    in_keep <= "11111111";
 
     wait for clkp;
     while in_ready = '0' loop
@@ -182,24 +231,26 @@ begin
     wait for clkp * 3;
 
     wait for clkp * 10;
-    -- test 6: burst of 2 18 byte fragments
+    -- test 6: burst of 2 66 byte fragments
     cur_test <= 6;
     in_data <= x"1234567890abcdef";
     in_keep <= "11111111";
     in_valid <= '1';
-    in_user(15 downto 0) <= x"0012";
+    in_user(15 downto 0) <= x"0042";
     in_user(23 downto 16) <= x"11";
     in_id(31 downto 0) <= x"0a0a0011";
     in_dest(31 downto 0) <= x"0a0a0010";
     in_dest(31 + 48 downto 32) <= (others => '0');
     in_last <= '0';
 
-    wait for clkp;
-    while in_ready = '0' loop
+    for i in 0 to 6 loop
       wait for clkp;
+      while in_ready = '0' loop
+        wait for clkp;
+      end loop;
+      in_data <= x"1122334455667788";
+      in_keep <= "11111111";
     end loop;
-    in_data <= x"1122334455667788";
-    in_keep <= "11111111";
 
     wait for clkp;
     while in_ready = '0' loop
@@ -217,19 +268,21 @@ begin
     in_data <= x"fedcba0987654321";
     in_keep <= "11111111";
     -- in_valid <= '1';
-    in_user(15 downto 0) <= x"0012";
+    in_user(15 downto 0) <= x"0042";
     in_user(23 downto 16) <= x"11";
     in_id(31 downto 0) <= x"0a0a0011";
     in_dest(31 downto 0) <= x"0a0a0010";
     in_dest(31 + 48 downto 32) <= (others => '0');
     in_last <= '0';
 
-    wait for clkp;
-    while in_ready = '0' loop
+    for i in 0 to 6 loop
       wait for clkp;
+      while in_ready = '0' loop
+        wait for clkp;
+      end loop;
+      in_data <= x"8877665544332211";
+      in_keep <= "11111111";
     end loop;
-    in_data <= x"8877665544332211";
-    in_keep <= "11111111";
 
     wait for clkp;
     while in_ready = '0' loop
@@ -246,9 +299,7 @@ begin
     in_valid <= '0';
     wait for clkp * 3;
 
-
     wait for clkp * 10;
-
 
     -- test 7: empty frame
     cur_test <= 7;
@@ -274,10 +325,9 @@ begin
 
   process
   begin
-
     wait for clkp * 2;
     wait until rising_edge(clk);
-    wait for 1 ns; -- make sure we read after the process above..
+    -- wait for 1 ns; -- make sure we read after the process above..
 
     report "test 1" severity note;
     cur_test_out <= 1;
@@ -286,6 +336,7 @@ begin
       wait for clkp;
     end loop;
     out_ready <= '1';
+    wait for 1 ns; -- let signals propagate synchronously
     assert out_keep = x"ff" and out_data = x"4510001700000000" and out_last = '0' report "invalid output 1.1 " & to_string(out_keep) & " " & to_hex_string(out_data);
     wait for clkp;
     while out_valid = '0' loop
@@ -297,10 +348,9 @@ begin
       wait for clkp;
     end loop;
     assert out_keep = "11111110" and out_data(63 downto 8) = x"0A0A0010123456" and out_last = '1' report "invalid output 1.3: " & to_string(out_keep) & " " & to_hex_string(out_data);
-    wait for clkp;
+    wait until rising_edge(clk);
     -- assert out_valid = '0' report "1output still valid";
     out_ready <= '0';
-
 
     report "test 2" severity note;
     cur_test_out <= 2;
@@ -309,6 +359,7 @@ begin
       wait for clkp;
     end loop;
     out_ready <= '1';
+    wait for 1 ns; -- let signals propagate synchronously
     assert out_keep = x"ff" and out_data = x"4510001900010000" and out_last = '0' report "invalid output 2.1 " & to_string(out_keep) & " " & to_hex_string(out_data);
     wait for clkp;
     while out_valid = '0' loop
@@ -325,10 +376,9 @@ begin
       wait for clkp;
     end loop;
     assert out_keep = "10000000" and out_data(63 downto 56) = x"90" and out_last = '1' report "invalid output 2.4: " & to_string(out_keep) & " " & to_hex_string(out_data);
-    wait for clkp;
+    wait until rising_edge(clk);
     -- assert out_valid = '0' report "2output still valid";
     out_ready <= '0';
-
 
     report "test 3" severity note;
     cur_test_out <= 3;
@@ -337,6 +387,7 @@ begin
       wait for clkp;
     end loop;
     out_ready <= '1';
+    wait for 1 ns; -- let signals propagate synchronously
     assert out_keep = x"ff" and out_data = x"4510002100020000" and out_last = '0' report "invalid output 3.1 " & to_string(out_keep) & " " & to_hex_string(out_data);
     wait for clkp;
     while out_valid = '0' loop
@@ -358,7 +409,7 @@ begin
       wait for clkp;
     end loop;
     assert out_keep = "10000000" and out_data(63 downto 56) = x"55" and out_last = '1' report "invalid output 3.5: " & to_string(out_keep) & " " & to_hex_string(out_data);
-    wait for clkp;
+    wait until rising_edge(clk);
     out_ready <= '0';
 
     report "test 4" severity note;
@@ -368,12 +419,13 @@ begin
       wait for clkp;
     end loop;
     out_ready <= '1';
-    assert out_keep = x"ff" and out_data = x"4510002400030000" and out_last = '0' report "invalid output 4.1 " & to_string(out_keep) & " " & to_hex_string(out_data);
+    wait for 1 ns; -- let signals propagate synchronously
+    assert out_keep = x"ff" and out_data = x"4510005400030000" and out_last = '0' report "invalid output 4.1 " & to_string(out_keep) & " " & to_hex_string(out_data);
     wait for clkp;
     while out_valid = '0' loop
       wait for clkp;
     end loop;
-    assert out_keep = x"ff" and out_data = x"401166820A0A0011" and out_last = '0' report "invalid output 4.2: " & to_string(out_keep) & " " & to_hex_string(out_data);
+    assert out_keep = x"ff" and out_data = x"401166520A0A0011" and out_last = '0' report "invalid output 4.2: " & to_string(out_keep) & " " & to_hex_string(out_data);
     wait for clkp;
     while out_valid = '0' loop
       wait for clkp;
@@ -388,11 +440,16 @@ begin
     while out_valid = '0' loop
       wait for clkp;
     end loop;
-    assert out_keep = "11110000" and out_data(63 downto 32) = x"55667788" and out_last = '1' report "invalid output 4.5: " & to_string(out_keep) & " " & to_hex_string(out_data);
-    wait for clkp;
+    for i in 0 to 5 loop
+      assert out_keep = x"ff" and out_data = x"5566778811223344" and out_last = '0' report "invalid output 4.5i: " & to_string(out_keep) & " " & to_hex_string(out_data);
+      wait for clkp;
+      while out_valid = '0' loop
+        wait for clkp;
+      end loop;
+    end loop;
+    assert out_keep = "11110000" and out_data(63 downto 32) = x"55667788" and out_last = '1' report "invalid output 4.6: " & to_string(out_keep) & " " & to_hex_string(out_data);
+    wait until rising_edge(clk);
     out_ready <= '0';
-
-
 
     report "test 5" severity note;
     cur_test_out <= 5;
@@ -401,12 +458,13 @@ begin
       wait for clkp;
     end loop;
     out_ready <= '1';
-    assert out_keep = x"ff" and out_data = x"4510002400042000" and out_last = '0' report "invalid output 5.0.1 " & to_string(out_keep) & " " & to_hex_string(out_data);
+    wait for 1 ns; -- let signals propagate synchronously
+    assert out_keep = x"ff" and out_data = x"4510005400042000" and out_last = '0' report "invalid output 5.0.1 " & to_string(out_keep) & " " & to_hex_string(out_data);
     wait for clkp;
     while out_valid = '0' loop
       wait for clkp;
     end loop;
-    assert out_keep = x"ff" and out_data = x"401146810A0A0011" and out_last = '0' report "invalid output 5.0.2: " & to_string(out_keep) & " " & to_hex_string(out_data);
+    assert out_keep = x"ff" and out_data = x"401146510A0A0011" and out_last = '0' report "invalid output 5.0.2: " & to_string(out_keep) & " " & to_hex_string(out_data);
     wait for clkp;
     while out_valid = '0' loop
       wait for clkp;
@@ -421,8 +479,15 @@ begin
     while out_valid = '0' loop
       wait for clkp;
     end loop;
-    assert out_keep = "11110000" and out_data(63 downto 32) = x"55667788" and out_last = '1' report "invalid output 5.0.5: " & to_string(out_keep) & " " & to_hex_string(out_data);
-    wait for clkp;
+    for i in 0 to 5 loop
+      assert out_keep = x"ff" and out_data = x"5566778811223344" and out_last = '0' report "invalid output 5.0.5i: " & to_string(out_keep) & " " & to_hex_string(out_data);
+      wait for clkp;
+      while out_valid = '0' loop
+        wait for clkp;
+      end loop;
+    end loop;
+    assert out_keep = "11110000" and out_data(63 downto 32) = x"55667788" and out_last = '1' report "invalid output 5.0.6: " & to_string(out_keep) & " " & to_hex_string(out_data);
+    wait until rising_edge(clk);
     out_ready <= '0';
 
     -- frag 2
@@ -431,21 +496,20 @@ begin
       wait for clkp;
     end loop;
     out_ready <= '1';
-    assert out_keep = x"ff" and out_data = x"4510001500040002" and out_last = '0' report "invalid output 5.1.1 " & to_string(out_keep) & " " & to_hex_string(out_data);
+    wait for 1 ns; -- let signals propagate synchronously
+    assert out_keep = x"ff" and out_data = x"4510001500040008" and out_last = '0' report "invalid output 5.1.1 " & to_string(out_keep) & " " & to_hex_string(out_data);
     wait for clkp;
     while out_valid = '0' loop
       wait for clkp;
     end loop;
-    assert out_keep = x"ff" and out_data = x"4011668e0A0A0011" and out_last = '0' report "invalid output 5.1.2: " & to_string(out_keep) & " " & to_hex_string(out_data);
+    assert out_keep = x"ff" and out_data = x"401166880A0A0011" and out_last = '0' report "invalid output 5.1.2: " & to_string(out_keep) & " " & to_hex_string(out_data);
     wait for clkp;
     while out_valid = '0' loop
       wait for clkp;
     end loop;
     assert out_keep = "11111000" and out_data(63 downto 24) = x"0A0A0010aa" and out_last = '1' report "invalid output 5.1.3: " & to_string(out_keep) & " " & to_hex_string(out_data);
-    wait for clkp;
+    wait until rising_edge(clk);
     out_ready <= '0';
-
-
 
     report "test 6" severity note;
     cur_test_out <= 6;
@@ -454,12 +518,13 @@ begin
       wait for clkp;
     end loop;
     out_ready <= '1';
-    assert out_keep = x"ff" and out_data = x"4510002400052000" and out_last = '0' report "invalid output 6.0.1 " & to_string(out_keep) & " " & to_hex_string(out_data);
+    wait for 1 ns; -- let signals propagate synchronously
+    assert out_keep = x"ff" and out_data = x"4510005400052000" and out_last = '0' report "invalid output 6.0.1 " & to_string(out_keep) & " " & to_hex_string(out_data);
     wait for clkp;
     while out_valid = '0' loop
       wait for clkp;
     end loop;
-    assert out_keep = x"ff" and out_data = x"401146800A0A0011" and out_last = '0' report "invalid output 6.0.2: " & to_string(out_keep) & " " & to_hex_string(out_data);
+    assert out_keep = x"ff" and out_data = x"401146500A0A0011" and out_last = '0' report "invalid output 6.0.2: " & to_string(out_keep) & " " & to_hex_string(out_data);
     wait for clkp;
     while out_valid = '0' loop
       wait for clkp;
@@ -474,8 +539,15 @@ begin
     while out_valid = '0' loop
       wait for clkp;
     end loop;
-    assert out_keep = "11110000" and out_data(63 downto 32) = x"55667788" and out_last = '1' report "invalid output 6.0.5: " & to_string(out_keep) & " " & to_hex_string(out_data);
-    wait for clkp;
+    for i in 0 to 5 loop
+      assert out_keep = x"ff" and out_data = x"5566778811223344" and out_last = '0' report "invalid output 6.0.5i: " & to_string(out_keep) & " " & to_hex_string(out_data);
+      wait for clkp;
+      while out_valid = '0' loop
+        wait for clkp;
+      end loop;
+    end loop;
+    assert out_keep = "11110000" and out_data(63 downto 32) = x"55667788" and out_last = '1' report "invalid output 6.0.6: " & to_string(out_keep) & " " & to_hex_string(out_data);
+    wait until rising_edge(clk);
     out_ready <= '0';
 
     -- frag 2
@@ -484,18 +556,19 @@ begin
       wait for clkp;
     end loop;
     out_ready <= '1';
-    assert out_keep = x"ff" and out_data = x"4510001600050002" and out_last = '0' report "invalid output 6.1.1 " & to_string(out_keep) & " " & to_hex_string(out_data);
+    wait for 1 ns; -- let signals propagate synchronously
+    assert out_keep = x"ff" and out_data = x"4510001600050008" and out_last = '0' report "invalid output 6.1.1 " & to_string(out_keep) & " " & to_hex_string(out_data);
     wait for clkp;
     while out_valid = '0' loop
       wait for clkp;
     end loop;
-    assert out_keep = x"ff" and out_data = x"4011668c0A0A0011" and out_last = '0' report "invalid output 6.1.2: " & to_string(out_keep) & " " & to_hex_string(out_data);
+    assert out_keep = x"ff" and out_data = x"401166860A0A0011" and out_last = '0' report "invalid output 6.1.2: " & to_string(out_keep) & " " & to_hex_string(out_data);
     wait for clkp;
     while out_valid = '0' loop
       wait for clkp;
     end loop;
     assert out_keep = "11111100" and out_data(63 downto 16) = x"0A0A0010aabb" and out_last = '1' report "invalid output 6.1.3: " & to_string(out_keep) & " " & to_hex_string(out_data);
-    wait for clkp;
+    wait until rising_edge(clk);
     out_ready <= '0';
 
     -- next frame
@@ -504,12 +577,13 @@ begin
       wait for clkp;
     end loop;
     out_ready <= '1';
-    assert out_keep = x"ff" and out_data = x"4510002400062000" and out_last = '0' report "invalid output 6.2.1 " & to_string(out_keep) & " " & to_hex_string(out_data);
+    wait for 1 ns; -- let signals propagate synchronously
+    assert out_keep = x"ff" and out_data = x"4510005400062000" and out_last = '0' report "invalid output 6.2.1 " & to_string(out_keep) & " " & to_hex_string(out_data);
     wait for clkp;
     while out_valid = '0' loop
       wait for clkp;
     end loop;
-    assert out_keep = x"ff" and out_data = x"4011467f0A0A0011" and out_last = '0' report "invalid output 6.2.2: " & to_string(out_keep) & " " & to_hex_string(out_data);
+    assert out_keep = x"ff" and out_data = x"4011464f0A0A0011" and out_last = '0' report "invalid output 6.2.2: " & to_string(out_keep) & " " & to_hex_string(out_data);
     wait for clkp;
     while out_valid = '0' loop
       wait for clkp;
@@ -524,8 +598,15 @@ begin
     while out_valid = '0' loop
       wait for clkp;
     end loop;
-    assert out_keep = "11110000" and out_data(63 downto 32) = x"44332211" and out_last = '1' report "invalid output 6.2.5: " & to_string(out_keep) & " " & to_hex_string(out_data);
-    wait for clkp;
+    for i in 0 to 5 loop
+      assert out_keep = x"ff" and out_data = x"4433221188776655" and out_last = '0' report "invalid output 6.2.5i: " & to_string(out_keep) & " " & to_hex_string(out_data);
+      wait for clkp;
+      while out_valid = '0' loop
+        wait for clkp;
+      end loop;
+    end loop;
+    assert out_keep = "11110000" and out_data(63 downto 32) = x"44332211" and out_last = '1' report "invalid output 6.2.6: " & to_string(out_keep) & " " & to_hex_string(out_data);
+    wait until rising_edge(clk);
     out_ready <= '0';
 
     -- next frame frag 2
@@ -534,19 +615,20 @@ begin
       wait for clkp;
     end loop;
     out_ready <= '1';
-    assert out_keep = x"ff" and out_data = x"4510001600060002" and out_last = '0' report "invalid output 6.3.1 " & to_string(out_keep) & " " & to_hex_string(out_data);
+    wait for 1 ns; -- let signals propagate synchronously
+    assert out_keep = x"ff" and out_data = x"4510001600060008" and out_last = '0' report "invalid output 6.3.1 " & to_string(out_keep) & " " & to_hex_string(out_data);
     wait for clkp;
     while out_valid = '0' loop
       wait for clkp;
     end loop;
-    assert out_keep = x"ff" and out_data = x"4011668b0A0A0011" and out_last = '0' report "invalid output 6.3.2: " & to_string(out_keep) & " " & to_hex_string(out_data);
+    assert out_keep = x"ff" and out_data = x"401166850A0A0011" and out_last = '0' report "invalid output 6.3.2: " & to_string(out_keep) & " " & to_hex_string(out_data);
     wait for clkp;
     while out_valid = '0' loop
       wait for clkp;
     end loop;
     assert out_keep = "11111100" and out_data(63 downto 16) = x"0A0A0010bbaa" and out_last = '1' report "invalid output 6.3.3: " & to_string(out_keep) & " " & to_hex_string(out_data);
 
-    wait for clkp;
+    wait until rising_edge(clk);
     -- assert out_valid = '0' report "6output still valid";
     out_ready <= '0';
 
@@ -557,6 +639,7 @@ begin
       wait for clkp;
     end loop;
     out_ready <= '1';
+    wait for 1 ns; -- let signals propagate synchronously
     assert out_keep = x"ff" and out_data = x"4510001400070000" and out_last = '0' report "invalid output 1.1 " & to_string(out_keep) & " " & to_hex_string(out_data);
     wait for clkp;
     while out_valid = '0' loop
@@ -568,7 +651,7 @@ begin
       wait for clkp;
     end loop;
     assert out_keep = "11110000" and out_data(63 downto 32) = x"0A0A0010" and out_last = '1' report "invalid output 1.3: " & to_string(out_keep) & " " & to_hex_string(out_data);
-    wait for clkp;
+    wait until rising_edge(clk);
     -- assert out_valid = '0' report "7output still valid";
     out_ready <= '0';
 

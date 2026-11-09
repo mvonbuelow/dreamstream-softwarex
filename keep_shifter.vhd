@@ -11,7 +11,6 @@
 -- TODO: check if user is valid until last
 -------------------------------------------------------------------------------
 
-
 library ieee;
 use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
@@ -41,7 +40,9 @@ entity keep_shifter is
     out_valid: out std_logic := '0';
     out_ready: in std_logic;
     out_last: out std_logic := '0';
-    out_keep: out std_logic_vector(width / 8 - 1 downto 0) := (others => '0')
+    out_keep: out std_logic_vector(width / 8 - 1 downto 0) := (others => '0');
+
+    fix_shift: boolean := false -- this is currently not a generic because it simplifies my testbenches...
   );
 end;
 
@@ -85,9 +86,8 @@ begin
     out_last <= shift_last when (in_keep(shift - 1) = '1' and in_valid = '1') or in_valid = '0' else in_last;
     out_user <= in_user; -- I think this is safe as we wait 1 cycle if we have last in the register
 
-    out_valid <= ((in_valid or shift_last) and shift_valid) or (in_valid and in_keep(in_keep'left)) or (in_valid and in_last and in_keep(in_keep'left));
-    in_ready <= (not shift_valid and not in_keep(in_keep'left) and (in_keep(0) or in_last) and not shift_last) or -- in_keep(in_keep'left)='0', but in_keep(0) or in_last, happens when we fix a shift; input "00001111", e.g.
+    out_valid <= ((in_valid or shift_last) and shift_valid) or (in_valid and ite_l(fix_shift, '0', '1'));
+    in_ready <= (not shift_valid and ite_l(fix_shift, '1', '0') and (in_keep(0) or in_last) and not shift_last) or -- in_keep(in_keep'left)='0', but in_keep(0) or in_last, happens when we fix a shift; input "00001111", e.g.
       (out_ready and not shift_last); -- shift_last means that we have a remainder from the last word and don't accept a new word in the current cycle.
-
   end generate;
 end architecture;
