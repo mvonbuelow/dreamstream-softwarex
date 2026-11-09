@@ -1,0 +1,28 @@
+process_compileconfig [dict create top "tb" width 64]
+
+load_module test
+
+pipeline_add test
+
+add_file -type prj ../ds.prj
+add_file -type prj ../net/dsnet.prj
+add_file -type prj ../bus/dsbus.prj
+
+add_file -type vhdl keep_packer4_tb.vhd
+add_file -type vhdl keep_packer_tb.vhd
+add_file -type vhdl keep_shifter_tb.vhd
+add_file -type vhdl rx_ipv4_tb.vhd
+add_file -type vhdl tx_ipv4_tb.vhd
+
+add_test -width 0 keep_packer4_tb
+add_test -width 0 keep_packer_tb
+add_test -width 0 keep_shifter_tb
+add_test -width 0 rx_ipv4_tb
+add_test -width 8 tx_ipv4_tb
+add_test -width 16 tx_ipv4_tb
+add_test -width 32 tx_ipv4_tb
+add_test -width 64 tx_ipv4_tb
+add_test -width 128 tx_ipv4_tb
+add_test -width 256 tx_ipv4_tb
+add_test -width 512 tx_ipv4_tb
+

@@ -4,13 +4,13 @@
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
 
-    eepkgs = {
-      url = "git+https://codeberg.org/gsi-ee/eepkgs";
+    openprj = {
+      url = "git+https://codeberg.org/gsi-ee/openprj.git?ref=main";
       inputs.nixpkgs.follows = "nixpkgs";
     };
   };
 
-  outputs = { nixpkgs, eepkgs, ... }:
+  outputs = { nixpkgs, openprj, ... }:
     let
       system = "x86_64-linux";
 
@@ -22,7 +22,7 @@
       devShells.${system}.default = pkgs.mkShell {
         packages = [
           pkgs.nvc
-          eepkgs.legacyPackages.${system}.openprj
+          openprj.packages.${system}.openprj
         ];
       };
     };
